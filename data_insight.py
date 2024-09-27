@@ -1,7 +1,5 @@
 # app.py
 import streamlit as st
-import pandas as pd
-from pymongo import MongoClient
 from data_processing import process_meal_data, get_summary, get_popular_meals, get_student_summary
 from mongo_connection import get_meal_data, collection
 from datetime import datetime, timedelta
