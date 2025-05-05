@@ -1,7 +1,7 @@
 # data_processing.py
 import pandas as pd
 
-def process_meal_data(df):
+def process_attendance_data(df):
     df['punch_time'] = pd.to_datetime(df['punch_time'], unit='s')
     df['date'] = df['punch_time'].dt.date
     df['time'] = df['punch_time'].dt.strftime('%I:%M %p')

@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
-from data_processing import process_meal_data, get_summary, get_popular_meals, get_student_summary
-from mongo_connection import get_meal_data, collection
+from data_processing import process_attendance_data, get_summary, get_popular_meals, get_student_summary
+from mongo_connection import get_meal_attendance_data, get_meal_plan_data
 from datetime import datetime, timedelta
 
 def get_current_week_dates():
@@ -17,18 +17,20 @@ current_week_start, current_week_end = get_current_week_dates()
 st.title("Weekly Meal Attendance Summary")
 
 # Fetch data from MongoDB
-meal_data = get_meal_data(collection)
+attendance_data = get_meal_attendance_data()
+meal_plan_data = get_meal_plan_data()
 
-print(meal_data)
+
+
 # Check if data is available
-if not meal_data.empty:
+if not attendance_data.empty:
     # Process data
-    meal_data = process_meal_data(meal_data)
+    attendance_data = process_attendance_data(attendance_data)
 
     # Filters
-    student_ids = meal_data['student_id'].unique()
-    meals = meal_data['meal_name'].unique()
-    date_range = [meal_data['punch_time'].min().date(), meal_data['punch_time'].max().date()]
+    student_ids = attendance_data['student_id'].unique()
+    meals = attendance_data['meal_name'].unique()
+    date_range = [attendance_data['punch_time'].min().date(), attendance_data['punch_time'].max().date()]
 
     selected_student = st.selectbox("Select Student ID", options=['All'] + list(student_ids))
     selected_meal = st.selectbox("Select Meal", options=['All'] + list(meals))
@@ -40,7 +42,7 @@ if not meal_data.empty:
 
 
     # Apply filters
-    filtered_data = meal_data.copy()
+    filtered_data = attendance_data.copy()
     if selected_student != 'All':
         filtered_data = filtered_data[filtered_data['student_id'] == selected_student]
     if selected_meal != 'All':
@@ -55,6 +57,17 @@ if not meal_data.empty:
 
     student_summary_df = get_student_summary(filtered_data)
 
+    student_summary_df['student_id'] = student_summary_df['student_id'].astype(str)
+    meal_plan_data['_id'] = meal_plan_data['_id'].astype(str)
+
+    student_summary_df = student_summary_df.merge(
+    meal_plan_data[['_id', 'first_name', 'last_name']],
+    left_on='student_id',
+    right_on='_id',
+    how='left'
+        ).drop(columns=['_id'])  # optionally drop '_id' after merge
+
+    print(student_summary_df)
 
     #Display
 
